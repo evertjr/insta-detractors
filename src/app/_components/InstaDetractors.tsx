@@ -1,5 +1,6 @@
 "use client";
 
+import JSZip from "jszip";
 import React, { useState } from "react";
 
 type Profile = {
@@ -13,27 +14,51 @@ const DetractorsComponent: React.FC = () => {
   const [following, setFollowing] = useState<Profile[]>([]);
   const [detractors, setDetractors] = useState<Profile[]>([]);
 
-  const handleFileChange =
-    (isFollowers: boolean) =>
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        const text = await file.text();
-        const json = JSON.parse(text);
-        // Determine if the provided file is the followers file, or else it's assumed to be following
-        const profiles = isFollowers
-          ? json.map((entry: any) => entry.string_list_data[0])
-          : json.relationships_following.map(
-              (entry: any) => entry.string_list_data[0]
-            );
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const zip = new JSZip();
+      const content = await zip.loadAsync(file);
 
-        if (isFollowers) {
-          setFollowers(profiles);
-        } else {
-          setFollowing(profiles);
-        }
-      }
-    };
+      // Use regex to match file names
+      const followersPattern = /^.*followers_\d+\.json$/;
+      const followingPattern = /^.*following(_\d+)?\.json$/;
+
+      const followersProfiles: Profile[] = [];
+      const followingProfiles: Profile[] = [];
+
+      // Search and process followers
+      await Promise.all(
+        Object.keys(content.files)
+          .filter((name) => followersPattern.test(name))
+          .map(async (name) => {
+            const fileContent = await content.files[name].async("text");
+            const json = JSON.parse(fileContent);
+            followersProfiles.push(
+              ...json.map((entry: any) => entry.string_list_data[0])
+            );
+          })
+      );
+
+      // Search and process following
+      await Promise.all(
+        Object.keys(content.files)
+          .filter((name) => followingPattern.test(name))
+          .map(async (name) => {
+            const fileContent = await content.files[name].async("text");
+            const json = JSON.parse(fileContent);
+            followingProfiles.push(
+              ...json.relationships_following.map(
+                (entry: any) => entry.string_list_data[0]
+              )
+            );
+          })
+      );
+
+      setFollowers(followersProfiles);
+      setFollowing(followingProfiles);
+    }
+  };
 
   const calculateDetractors = () => {
     const followersSet = new Set(followers.map((f) => f.value));
@@ -49,23 +74,10 @@ const DetractorsComponent: React.FC = () => {
             Followers
           </label>
           <input
-            name="followers-file"
             type="file"
-            accept=".json"
-            onChange={handleFileChange(true)}
-            placeholder="Upload Followers JSON"
-          />
-        </div>
-        <div className="flex flex-col gap-2 bg-zinc-100 w-fit p-4 rounded-xl">
-          <label htmlFor="following-file" className="font-bold">
-            Following
-          </label>
-          <input
-            name="following-file"
-            type="file"
-            accept=".json"
-            onChange={handleFileChange(false)}
-            placeholder="Upload Following JSON"
+            accept=".zip"
+            onChange={handleFileChange}
+            placeholder="Upload ZIP File"
           />
         </div>
       </div>
