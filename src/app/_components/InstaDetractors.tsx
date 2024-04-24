@@ -143,7 +143,7 @@ const DetractorsComponent: React.FC = () => {
 
               <Drawer.Portal>
                 <Drawer.Overlay className="fixed inset-0 bg-black/40" />
-                <Drawer.Content className="bg-zinc-100 flex flex-col rounded-t-[10px] h-[96%] mt-24 fixed bottom-0 left-0 right-0">
+                <Drawer.Content className="bg-zinc-100 flex flex-col rounded-t-[10px] h-[90%] mt-24 fixed bottom-0 left-0 right-0">
                   <div className="p-4 bg-white rounded-t-[10px] overflow-y-scroll  flex-1">
                     <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-zinc-300 mb-8" />
                     <div className="max-w-md mx-auto">
@@ -164,7 +164,7 @@ const DetractorsComponent: React.FC = () => {
                       <ul className="mt-4">
                         {Array.from({ length: 8 }, (_, i) => i + 1).map(
                           (num) => (
-                            <li key={num}>
+                            <li key={num} className="bg-zinc-400">
                               <Image
                                 src={`/img/${num}.webp`}
                                 alt={`Image ${num}`}
