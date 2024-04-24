@@ -1,4 +1,4 @@
-import DetractorsComponent from "./_components/InstaDetractors";
+import { DetractorsComponent } from "./_components/InstaDetractors";
 
 export default function Home() {
   return (

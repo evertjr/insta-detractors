@@ -1,9 +1,9 @@
 "use client";
 
 import JSZip from "jszip";
-import { ExternalLink, InfoIcon } from "lucide-react";
+import { CheckCheck, ExternalLink, InfoIcon } from "lucide-react";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { FormEvent, useState } from "react";
 import { Drawer } from "vaul";
 
 type Profile = {
@@ -12,7 +12,7 @@ type Profile = {
   timestamp: number;
 };
 
-const DetractorsComponent: React.FC = () => {
+export function DetractorsComponent() {
   const [followers, setFollowers] = useState<Profile[]>([]);
   const [following, setFollowing] = useState<Profile[]>([]);
   const [detractors, setDetractors] = useState<Profile[]>([]);
@@ -105,7 +105,8 @@ const DetractorsComponent: React.FC = () => {
     }
   };
 
-  const calculateDetractors = () => {
+  const calculateDetractors = (e: FormEvent) => {
+    e.preventDefault();
     const followersSet = new Set(followers.map((f) => f.value));
     const detractorsList = following.filter((f) => !followersSet.has(f.value));
     setDetractors(detractorsList);
@@ -113,7 +114,7 @@ const DetractorsComponent: React.FC = () => {
   };
 
   return (
-    <div className="p-4 w-full max-w-4xl mx-auto mt-8">
+    <form id="followers-form" className="p-4 w-full max-w-4xl mx-auto mt-8">
       <span className="text-3xl mr-2">🤔</span>
 
       <h1 className="bg-gradient-to-r font-bold text-3xl from-purple-600 via-pink-500 to-red-400 inline-block text-transparent bg-clip-text">
@@ -195,15 +196,16 @@ const DetractorsComponent: React.FC = () => {
         </div>
       </div>
       <button
+        type="submit"
         className="px-6 py-2 font-medium bg-purple-600 border text-white border-purple-600 rounded-full hover:bg-purple-800"
         onClick={calculateDetractors}
       >
         Buscar Falsianes
       </button>
 
-      <div className="mt-10 max-w-6xl">
+      <div className="mt-20 max-w-6xl">
         {pendingFollowRequests.length > 0 && showPending && (
-          <section className="mt-10 max-w-6xl">
+          <section className="max-w-6xl">
             <h2 className="font-bold">
               Não aceitou sua solicitação de seguir:
             </h2>
@@ -212,17 +214,11 @@ const DetractorsComponent: React.FC = () => {
             </h3>
             <ul className="flex mt-4 flex-wrap gap-4">
               {pendingFollowRequests.map((request, index) => (
-                <li key={index}>
-                  <a
-                    href={request.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-indigo-800 flex gap-2 items-center justify-center break-all hover:-rotate-2 hover:bg-indigo-50 transition-transform border-indigo-300 border bg-indigo-100 px-4 py-4 rounded-xl hover:scale-110"
-                  >
-                    {request.value}
-                    <ExternalLink className="w-4" />
-                  </a>
-                </li>
+                <PendingFollowersLink
+                  key={index}
+                  href={request.href}
+                  value={request.value}
+                />
               ))}
             </ul>
           </section>
@@ -236,24 +232,64 @@ const DetractorsComponent: React.FC = () => {
 
             <ul className="flex gap-4 mt-4 flex-wrap">
               {detractors.map((d, index) => (
-                <li key={index}>
-                  <a
-                    href={d.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-purple-800 flex gap-2 items-center justify-center break-all hover:-rotate-2 hover:bg-purple-50 transition-transform border-purple-300 border bg-purple-100 px-2 py-2 rounded-xl hover:scale-110"
-                  >
-                    {d.value}
-                    <ExternalLink className="w-4" />
-                  </a>
-                </li>
+                <DetractorLink key={index} href={d.href} value={d.value} />
               ))}
             </ul>
           </section>
         )}
       </div>
-    </div>
+    </form>
   );
-};
+}
 
-export default DetractorsComponent;
+function DetractorLink({ href, value }: { href: string; value: string }) {
+  const [opened, setOpened] = useState(false);
+
+  return (
+    <li>
+      <a
+        data-opened={opened ? "true" : "false"}
+        onClick={(e) => {
+          setOpened(true);
+        }}
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        className="text-purple-800 data-[opened=true]:text-lime-800 data-[opened=true]:bg-lime-200 flex gap-2 items-center justify-center break-all hover:-rotate-2 hover:bg-purple-50 transition-transform border-purple-300 data-[opened=true]:border-lime-300 border bg-purple-100 px-2 py-2 rounded-xl hover:scale-110"
+      >
+        {value}
+        <ExternalLink className="w-4" />
+        {opened && <CheckCheck className="w-5 text-lime-500" />}
+      </a>
+    </li>
+  );
+}
+
+function PendingFollowersLink({
+  href,
+  value,
+}: {
+  href: string;
+  value: string;
+}) {
+  const [opened, setOpened] = useState(false);
+
+  return (
+    <li>
+      <a
+        data-opened={opened ? "true" : "false"}
+        onClick={(e) => {
+          setOpened(true);
+        }}
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        className="text-indigo-800 data-[opened=true]:text-lime-800 data-[opened=true]:bg-lime-200 flex gap-2 items-center justify-center break-all hover:-rotate-2 hover:bg-indigo-50 transition-transform border-indigo-300 data-[opened=true]:border-lime-300 border bg-indigo-100 px-2 py-2 rounded-xl hover:scale-110"
+      >
+        {value}
+        <ExternalLink className="w-4" />
+        {opened && <CheckCheck className="w-5 text-lime-500" />}
+      </a>
+    </li>
+  );
+}
