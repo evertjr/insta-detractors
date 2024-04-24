@@ -29,8 +29,8 @@ export function DetractorsComponent() {
       const content = await zip.loadAsync(file);
 
       // Use regex to match file names
-      const followersPattern = /^.*followers_\d+\.json$/;
-      const followingPattern = /^.*following(_\d+)?\.json$/;
+      const followersPattern = /^.*followers(?:_\d+)?\.json$/;
+      const followingPattern = /^.*following(?:_\d+)?\.json$/;
       const pendingPattern = /^.*pending_follow_requests\.json$/;
 
       const followersProfiles: Profile[] = [];
