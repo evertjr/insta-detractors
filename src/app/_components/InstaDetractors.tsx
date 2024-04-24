@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import JSZip from "jszip";
 import { CheckCheck, ExternalLink, InfoIcon } from "lucide-react";
 import Image from "next/image";
@@ -109,6 +110,7 @@ export function DetractorsComponent() {
     e.preventDefault();
     const followersSet = new Set(followers.map((f) => f.value));
     const detractorsList = following.filter((f) => !followersSet.has(f.value));
+
     setDetractors(detractorsList);
     setShowPending(true);
   };
@@ -195,17 +197,25 @@ export function DetractorsComponent() {
           </small>
         </div>
       </div>
-      <button
+      <motion.button
+        whileTap={{
+          scale: 0.9,
+        }}
         type="submit"
         className="px-6 py-2 font-medium bg-purple-600 border text-white border-purple-600 rounded-full hover:bg-purple-800"
         onClick={calculateDetractors}
       >
         Buscar Falsianes
-      </button>
+      </motion.button>
 
-      <div className="mt-20 max-w-6xl">
+      <div className="pt-8 mt-8 border-t border-dashed max-w-6xl scroll-mt-10">
         {pendingFollowRequests.length > 0 && showPending && (
-          <section className="max-w-6xl">
+          <motion.section
+            animate={{
+              y: [100, 0],
+            }}
+            className="max-w-6xl"
+          >
             <h2 className="font-bold">
               Não aceitou sua solicitação de seguir:
             </h2>
@@ -221,10 +231,15 @@ export function DetractorsComponent() {
                 />
               ))}
             </ul>
-          </section>
+          </motion.section>
         )}
         {detractors.length > 0 && (
-          <section className="mt-10">
+          <motion.section
+            animate={{
+              y: [100, 0],
+            }}
+            className="mt-10"
+          >
             <h2 className="font-bold">Não te segue de volta:</h2>
             <h3 className="text-sm text-zinc-400">
               Ta achando que é celebridade.
@@ -235,7 +250,7 @@ export function DetractorsComponent() {
                 <DetractorLink key={index} href={d.href} value={d.value} />
               ))}
             </ul>
-          </section>
+          </motion.section>
         )}
       </div>
     </form>
@@ -247,7 +262,11 @@ function DetractorLink({ href, value }: { href: string; value: string }) {
 
   return (
     <li>
-      <a
+      <motion.a
+        whileHover={{
+          rotate: -3,
+          scale: 1.2,
+        }}
         data-opened={opened ? "true" : "false"}
         onClick={(e) => {
           setOpened(true);
@@ -255,12 +274,12 @@ function DetractorLink({ href, value }: { href: string; value: string }) {
         href={href}
         target="_blank"
         rel="noreferrer"
-        className="text-purple-800 data-[opened=true]:text-lime-800 data-[opened=true]:bg-lime-200 flex gap-2 items-center justify-center break-all hover:-rotate-2 hover:bg-purple-50 transition-transform border-purple-300 data-[opened=true]:border-lime-300 border bg-purple-100 px-2 py-2 rounded-xl hover:scale-110"
+        className="text-purple-800 data-[opened=true]:text-lime-800 data-[opened=true]:bg-lime-200 flex gap-2 items-center justify-center break-all  hover:bg-purple-50  border-purple-300 data-[opened=true]:border-lime-300 border bg-purple-100 px-2 py-2 rounded-xl"
       >
         {value}
         <ExternalLink className="w-4" />
         {opened && <CheckCheck className="w-5 text-lime-500" />}
-      </a>
+      </motion.a>
     </li>
   );
 }
@@ -276,7 +295,11 @@ function PendingFollowersLink({
 
   return (
     <li>
-      <a
+      <motion.a
+        whileHover={{
+          rotate: -3,
+          scale: 1.2,
+        }}
         data-opened={opened ? "true" : "false"}
         onClick={(e) => {
           setOpened(true);
@@ -284,12 +307,12 @@ function PendingFollowersLink({
         href={href}
         target="_blank"
         rel="noreferrer"
-        className="text-indigo-800 data-[opened=true]:text-lime-800 data-[opened=true]:bg-lime-200 flex gap-2 items-center justify-center break-all hover:-rotate-2 hover:bg-indigo-50 transition-transform border-indigo-300 data-[opened=true]:border-lime-300 border bg-indigo-100 px-2 py-2 rounded-xl hover:scale-110"
+        className="text-indigo-800 data-[opened=true]:text-lime-800 data-[opened=true]:bg-lime-200 flex gap-2 items-center justify-center break-all  hover:bg-indigo-50  border-indigo-300 data-[opened=true]:border-lime-300 border bg-indigo-100 px-2 py-2 rounded-xl"
       >
         {value}
         <ExternalLink className="w-4" />
         {opened && <CheckCheck className="w-5 text-lime-500" />}
-      </a>
+      </motion.a>
     </li>
   );
 }

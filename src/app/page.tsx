@@ -8,7 +8,14 @@ export default function Home() {
       </main>
       <footer className="p-6">
         <p className="text-center text-gray-600">
-          Made with ❤️ by Evert Junior
+          Made with ❤️ by{" "}
+          <a
+            href="https://instagram.com/ooevert"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Evert Junior
+          </a>
         </p>
       </footer>
     </div>
