@@ -19,6 +19,7 @@ const DetractorsComponent: React.FC = () => {
   const [pendingFollowRequests, setPendingFollowRequests] = useState<Profile[]>(
     []
   );
+  const [showPending, setShowPending] = useState<boolean>(false);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -108,6 +109,7 @@ const DetractorsComponent: React.FC = () => {
     const followersSet = new Set(followers.map((f) => f.value));
     const detractorsList = following.filter((f) => !followersSet.has(f.value));
     setDetractors(detractorsList);
+    setShowPending(true);
   };
 
   return (
@@ -188,7 +190,7 @@ const DetractorsComponent: React.FC = () => {
           </div>
           <small className="text-zinc-500 text-xs">
             Tudo será processado no seu dispositivo e nenhum dado será enviado
-            para internet.
+            para a internet.
           </small>
         </div>
       </div>
@@ -200,7 +202,7 @@ const DetractorsComponent: React.FC = () => {
       </button>
 
       <div className="mt-10 max-w-6xl">
-        {pendingFollowRequests.length > 0 && (
+        {pendingFollowRequests.length > 0 && showPending && (
           <section className="mt-10 max-w-6xl">
             <h2 className="font-bold">
               Não aceitou sua solicitação de seguir:
