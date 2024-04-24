@@ -21,6 +21,7 @@ export function DetractorsComponent() {
     []
   );
   const [showPending, setShowPending] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -110,6 +111,14 @@ export function DetractorsComponent() {
     e.preventDefault();
     const followersSet = new Set(followers.map((f) => f.value));
     const detractorsList = following.filter((f) => !followersSet.has(f.value));
+
+    if (detractorsList.length === 0) {
+      return setError(
+        "Nada encontrado, isso provavelmente foi um erro ao ler o arquivo."
+      );
+    }
+
+    setError(null);
 
     setDetractors(detractorsList);
     setShowPending(true);
@@ -209,6 +218,7 @@ export function DetractorsComponent() {
       </motion.button>
 
       <div className="pt-8 mt-8 border-t border-dashed max-w-6xl scroll-mt-10">
+        {error && <span className="text-zinc-500">{error}</span>}
         {pendingFollowRequests.length > 0 && showPending && (
           <motion.section
             animate={{
