@@ -191,7 +191,7 @@ export function DetractorsComponent() {
               </Drawer.Portal>
             </Drawer.Root>
           </div>
-          <small className="text-zinc-500 text-xs">
+          <small className="text-zinc-600 text-xs">
             Tudo será processado no seu dispositivo e nenhum dado será enviado
             para a internet.
           </small>
