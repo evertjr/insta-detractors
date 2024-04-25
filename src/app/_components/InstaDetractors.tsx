@@ -162,19 +162,26 @@ export function DetractorsComponent() {
                     <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-zinc-300 mb-8" />
                     <div className="max-w-md mx-auto">
                       <Drawer.Title className="font-bold mb-4">
-                        Solitando seus dados do Instagram
+                        Solicitando seus dados do Instagram
                       </Drawer.Title>
-                      <p>
-                        Utilizamos o método mais seguro e preciso possível para
-                        obter essas informações, sem necessidade de usar sua
-                        senha ou arriscar ter sua conta banida. Para isso é
-                        necessário que solicite seus dados ao Instagram. É
-                        simples e você recebe em poucos minutos.
-                      </p>
-                      <p className="mt-2">
-                        Acesse as configurações do app ou site e siga os passos
-                        das imagens abaixo.
-                      </p>
+                      <div className="flex flex-col gap-2">
+                        <p>
+                          Utilizamos um método 100% seguro e privativo para
+                          obter essas informações, sem necessidade de usar sua
+                          senha ou arriscar ter sua conta banida. Para isso é
+                          necessário que solicite seus dados ao Instagram. É
+                          simples e você recebe em poucos minutos.
+                        </p>
+                        <p>
+                          Acesse as configurações do app ou site e siga os
+                          passos das imagens abaixo.
+                        </p>
+                        <p className="bg-zinc-100 rounded-xl px-2 py-1">
+                          Obs: Para evitar falsos positivos, é importante que
+                          selecione <strong>Desde o início</strong> no intervalo
+                          de dados.
+                        </p>
+                      </div>
                       <ul className="mt-4">
                         {Array.from({ length: 8 }, (_, i) => i + 1).map(
                           (num) => (
