@@ -1,11 +1,11 @@
 "use client";
 
+import { useDebounce } from "@/hooks/useDebounce";
 import { motion } from "framer-motion";
 import JSZip from "jszip";
-import { CheckCheck, ExternalLink, InfoIcon } from "lucide-react";
-import Image from "next/image";
-import React, { FormEvent, useState } from "react";
-import { Drawer } from "vaul";
+import { AtSign, CheckCheck, ExternalLink } from "lucide-react";
+import React, { FormEvent, memo, useCallback, useState } from "react";
+import { InstructionsModal } from "./InstructionsModal";
 
 type Profile = {
   href: string;
@@ -23,89 +23,104 @@ export function DetractorsComponent() {
   const [showPending, setShowPending] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const zip = new JSZip();
-      const content = await zip.loadAsync(file);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const searchTermRef = React.useRef<HTMLInputElement>(null);
+  const debouncedSearchTerm = useDebounce(searchTerm, 200);
+  const filterDetractors = detractors.filter((d) =>
+    d.value.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+  );
+  const filterPendingFollowRequests = pendingFollowRequests.filter((request) =>
+    request.value.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+  );
 
-      // Use regex to match file names
-      const followersPattern = /^.*followers(?:_\d+)?\.json$/;
-      const followingPattern = /^.*following(?:_\d+)?\.json$/;
-      const pendingPattern = /^.*pending_follow_requests\.json$/;
+  const handleFileChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        const zip = new JSZip();
+        const content = await zip.loadAsync(file);
 
-      const followersProfiles: Profile[] = [];
-      const followingProfiles: Profile[] = [];
-      const pendingProfiles: Profile[] = [];
+        // Use regex to match file names
+        const followersPattern = /^.*followers(?:_\d+)?\.json$/;
+        const followingPattern = /^.*following(?:_\d+)?\.json$/;
+        const pendingPattern = /^.*pending_follow_requests\.json$/;
 
-      const pendingFiles = Object.keys(content.files).filter((name) =>
-        pendingPattern.test(name)
-      );
+        const followersProfiles: Profile[] = [];
+        const followingProfiles: Profile[] = [];
+        const pendingProfiles: Profile[] = [];
 
-      if (pendingFiles.length > 0) {
-        const fileContent = await content.files[pendingFiles[0]].async("text");
-        try {
-          const json = JSON.parse(fileContent);
-          pendingProfiles.push(
-            ...json.relationships_follow_requests_sent.flatMap(
-              (entry: any) => entry.string_list_data
-            )
+        const pendingFiles = Object.keys(content.files).filter((name) =>
+          pendingPattern.test(name)
+        );
+
+        if (pendingFiles.length > 0) {
+          const fileContent = await content.files[pendingFiles[0]].async(
+            "text"
           );
-        } catch (error) {
-          console.error(
-            "Error parsing JSON for pending follow requests.",
-            error
-          );
+          try {
+            const json = JSON.parse(fileContent);
+            pendingProfiles.push(
+              ...json.relationships_follow_requests_sent.flatMap(
+                (entry: any) => entry.string_list_data
+              )
+            );
+          } catch (error) {
+            console.error(
+              "Error parsing JSON for pending follow requests.",
+              error
+            );
+          }
         }
+
+        // Search and process followers
+        await Promise.all(
+          Object.keys(content.files)
+            .filter((name) => followersPattern.test(name))
+            .map(async (name) => {
+              const fileContent = await content.files[name].async("text");
+              try {
+                const json = JSON.parse(fileContent);
+                followersProfiles.push(
+                  ...json.map((entry: any) => entry.string_list_data[0])
+                );
+              } catch (error) {
+                console.error(
+                  `Error parsing JSON in followers' data for file: ${name}`,
+                  error
+                );
+              }
+            })
+        );
+
+        // Search and process following
+        await Promise.all(
+          Object.keys(content.files)
+            .filter((name) => followingPattern.test(name))
+            .map(async (name) => {
+              const fileContent = await content.files[name].async("text");
+              try {
+                const json = JSON.parse(fileContent);
+                followingProfiles.push(
+                  ...json.relationships_following.map(
+                    (entry: any) => entry.string_list_data[0]
+                  )
+                );
+              } catch (error) {
+                console.error(
+                  `Error parsing JSON in following data for file: ${name}`,
+                  error
+                );
+              }
+            })
+        );
+
+        setPendingFollowRequests(pendingProfiles);
+        setFollowers(followersProfiles);
+        setFollowing(followingProfiles);
       }
-
-      // Search and process followers
-      await Promise.all(
-        Object.keys(content.files)
-          .filter((name) => followersPattern.test(name))
-          .map(async (name) => {
-            const fileContent = await content.files[name].async("text");
-            try {
-              const json = JSON.parse(fileContent);
-              followersProfiles.push(
-                ...json.map((entry: any) => entry.string_list_data[0])
-              );
-            } catch (error) {
-              console.error(
-                `Error parsing JSON in followers' data for file: ${name}`,
-                error
-              );
-            }
-          })
-      );
-
-      // Search and process following
-      await Promise.all(
-        Object.keys(content.files)
-          .filter((name) => followingPattern.test(name))
-          .map(async (name) => {
-            const fileContent = await content.files[name].async("text");
-            try {
-              const json = JSON.parse(fileContent);
-              followingProfiles.push(
-                ...json.relationships_following.map(
-                  (entry: any) => entry.string_list_data[0]
-                )
-              );
-            } catch (error) {
-              console.error(
-                `Error parsing JSON in following data for file: ${name}`,
-                error
-              );
-            }
-          })
-      );
-
-      setPendingFollowRequests(pendingProfiles);
-      setFollowers(followersProfiles);
-      setFollowing(followingProfiles);
-    }
-  };
+    },
+    []
+  );
 
   const calculateDetractors = (e: FormEvent) => {
     e.preventDefault();
@@ -147,65 +162,7 @@ export function DetractorsComponent() {
             placeholder="Upload ZIP File"
           />
           <div className="bg-zinc-200 rounded-xl p-2 flex items-center gap-2 mt-4">
-            <Drawer.Root>
-              <InfoIcon className="w-5 text-purple-500 inline-flex" />
-              <Drawer.Trigger>
-                <span className="underline text-purple-700">
-                  Como conseguir esse arquivo?
-                </span>
-              </Drawer.Trigger>
-
-              <Drawer.Portal>
-                <Drawer.Overlay className="fixed inset-0 bg-black/40" />
-                <Drawer.Content className="bg-zinc-100 flex flex-col rounded-t-[10px] h-[90%] mt-24 fixed bottom-0 left-0 right-0">
-                  <div className="p-4 bg-white rounded-t-[10px] overflow-y-scroll  flex-1">
-                    <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-zinc-300 mb-8" />
-                    <div className="max-w-md mx-auto">
-                      <Drawer.Title className="font-bold mb-4">
-                        Solicitando seus dados do Instagram
-                      </Drawer.Title>
-                      <div className="flex flex-col gap-2">
-                        <p>
-                          Utilizamos um método 100% seguro e privativo para
-                          obter essas informações, sem necessidade de usar sua
-                          senha ou arriscar ter sua conta banida. Para isso é
-                          necessário que solicite seus dados ao Instagram. É
-                          simples e você recebe em poucos minutos.
-                        </p>
-                        <p>
-                          Acesse as configurações do app ou site e siga os
-                          passos das imagens abaixo.
-                        </p>
-                        <p className="bg-zinc-100 rounded-xl px-2 py-1">
-                          Obs: Para evitar falsos positivos, é importante que
-                          selecione <strong>Desde o início</strong> no intervalo
-                          de dados.
-                        </p>
-                      </div>
-                      <ul className="mt-4">
-                        {Array.from({ length: 8 }, (_, i) => i + 1).map(
-                          (num) => (
-                            <li key={num} className="bg-zinc-400">
-                              <Image
-                                src={`/img/${num}.webp`}
-                                alt={`Image ${num}`}
-                                width={720}
-                                height={1280}
-                                className="mb-4 w-full object-contain"
-                              />
-                            </li>
-                          )
-                        )}
-                      </ul>
-                      <p className="mt-4">
-                        Pronto! Você receberá em seu email um link para baixar
-                        um arquivo, basta anexar no lugar indicado neste site.
-                      </p>
-                    </div>
-                  </div>
-                </Drawer.Content>
-              </Drawer.Portal>
-            </Drawer.Root>
+            <InstructionsModal />
           </div>
           <small className="text-zinc-600 text-xs">
             Tudo será processado no seu dispositivo e nenhum dado será enviado
@@ -226,7 +183,22 @@ export function DetractorsComponent() {
 
       <div className="pt-8 mt-8 border-t border-dashed max-w-6xl scroll-mt-10">
         {error && <span className="text-zinc-500">{error}</span>}
-        {pendingFollowRequests.length > 0 && showPending && (
+
+        {pendingFollowRequests.length > 0 && detractors.length > 0 && (
+          <div className="relative flex items-center mb-6">
+            <AtSign className="w-4 h-4 absolute left-3 text-zinc-400" />
+            <input
+              ref={searchTermRef}
+              id="search"
+              type="text"
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Filtrar falsianes..."
+              className="pr-4 pl-10 py-2 border rounded-full"
+            />
+          </div>
+        )}
+
+        {filterPendingFollowRequests.length > 0 && showPending && (
           <motion.section
             animate={{
               y: [100, 0],
@@ -240,7 +212,7 @@ export function DetractorsComponent() {
               Talvez se mandar uma carta ou um pombo correio...
             </h3>
             <ul className="flex mt-4 flex-wrap gap-4">
-              {pendingFollowRequests.map((request, index) => (
+              {filterPendingFollowRequests.map((request, index) => (
                 <PendingFollowersLink
                   key={index}
                   href={request.href}
@@ -250,7 +222,7 @@ export function DetractorsComponent() {
             </ul>
           </motion.section>
         )}
-        {detractors.length > 0 && (
+        {filterDetractors.length > 0 && (
           <motion.section
             animate={{
               y: [100, 0],
@@ -263,7 +235,7 @@ export function DetractorsComponent() {
             </h3>
 
             <ul className="flex gap-4 mt-4 flex-wrap">
-              {detractors.map((d, index) => (
+              {filterDetractors.map((d, index) => (
                 <DetractorLink key={index} href={d.href} value={d.value} />
               ))}
             </ul>
@@ -274,7 +246,13 @@ export function DetractorsComponent() {
   );
 }
 
-function DetractorLink({ href, value }: { href: string; value: string }) {
+const DetractorLink = memo(function DetractorLink({
+  href,
+  value,
+}: {
+  href: string;
+  value: string;
+}) {
   const [opened, setOpened] = useState(false);
 
   return (
@@ -299,9 +277,9 @@ function DetractorLink({ href, value }: { href: string; value: string }) {
       </motion.a>
     </li>
   );
-}
+});
 
-function PendingFollowersLink({
+const PendingFollowersLink = memo(function PendingFollowersLink({
   href,
   value,
 }: {
@@ -332,4 +310,4 @@ function PendingFollowersLink({
       </motion.a>
     </li>
   );
-}
+});
