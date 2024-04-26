@@ -3,9 +3,11 @@
 import { useDebounce } from "@/hooks/useDebounce";
 import { motion } from "framer-motion";
 import JSZip from "jszip";
-import { AtSign, CheckCheck, ExternalLink } from "lucide-react";
-import React, { FormEvent, memo, useCallback, useState } from "react";
+import { AtSign } from "lucide-react";
+import React, { FormEvent, useCallback, useState, useTransition } from "react";
 import { InstructionsModal } from "./InstructionsModal";
+import { Spinner } from "./Spinner";
+import { UserLink } from "./UserLink";
 
 type Profile = {
   href: string;
@@ -14,12 +16,15 @@ type Profile = {
 };
 
 export function DetractorsComponent() {
+  const [isPending, startTransition] = useTransition();
+  console.log(isPending);
   const [followers, setFollowers] = useState<Profile[]>([]);
   const [following, setFollowing] = useState<Profile[]>([]);
   const [detractors, setDetractors] = useState<Profile[]>([]);
   const [pendingFollowRequests, setPendingFollowRequests] = useState<Profile[]>(
     []
   );
+
   const [showPending, setShowPending] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,96 +39,99 @@ export function DetractorsComponent() {
   );
 
   const handleFileChange = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        const zip = new JSZip();
-        const content = await zip.loadAsync(file);
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      startTransition(async () => {
+        const file = e.target.files?.[0];
+        if (file) {
+          const zip = new JSZip();
+          const content = await zip.loadAsync(file);
 
-        // Use regex to match file names
-        const followersPattern = /^.*followers(?:_\d+)?\.json$/;
-        const followingPattern = /^.*following(?:_\d+)?\.json$/;
-        const pendingPattern = /^.*pending_follow_requests\.json$/;
+          // Use regex to match file names
+          const followersPattern = /^.*followers(?:_\d+)?\.json$/;
+          const followingPattern = /^.*following(?:_\d+)?\.json$/;
+          const pendingPattern = /^.*pending_follow_requests\.json$/;
 
-        const followersProfiles: Profile[] = [];
-        const followingProfiles: Profile[] = [];
-        const pendingProfiles: Profile[] = [];
+          const followersProfiles: Profile[] = [];
+          const followingProfiles: Profile[] = [];
+          const pendingProfiles: Profile[] = [];
 
-        const pendingFiles = Object.keys(content.files).filter((name) =>
-          pendingPattern.test(name)
-        );
-
-        if (pendingFiles.length > 0) {
-          const fileContent = await content.files[pendingFiles[0]].async(
-            "text"
+          const pendingFiles = Object.keys(content.files).filter((name) =>
+            pendingPattern.test(name)
           );
-          try {
-            const json = JSON.parse(fileContent);
-            pendingProfiles.push(
-              ...json.relationships_follow_requests_sent.flatMap(
-                (entry: any) => entry.string_list_data
-              )
+
+          if (pendingFiles.length > 0) {
+            const fileContent = await content.files[pendingFiles[0]].async(
+              "text"
             );
-          } catch (error) {
-            console.error(
-              "Error parsing JSON for pending follow requests.",
-              error
-            );
+            try {
+              const json = JSON.parse(fileContent);
+              pendingProfiles.push(
+                ...json.relationships_follow_requests_sent.flatMap(
+                  (entry: any) => entry.string_list_data
+                )
+              );
+            } catch (error) {
+              console.error(
+                "Error parsing JSON for pending follow requests.",
+                error
+              );
+            }
           }
+
+          // Search and process followers
+          await Promise.all(
+            Object.keys(content.files)
+              .filter((name) => followersPattern.test(name))
+              .map(async (name) => {
+                const fileContent = await content.files[name].async("text");
+                try {
+                  const json = JSON.parse(fileContent);
+                  followersProfiles.push(
+                    ...json.map((entry: any) => entry.string_list_data[0])
+                  );
+                } catch (error) {
+                  console.error(
+                    `Error parsing JSON in followers' data for file: ${name}`,
+                    error
+                  );
+                }
+              })
+          );
+
+          // Search and process following
+          await Promise.all(
+            Object.keys(content.files)
+              .filter((name) => followingPattern.test(name))
+              .map(async (name) => {
+                const fileContent = await content.files[name].async("text");
+                try {
+                  const json = JSON.parse(fileContent);
+                  followingProfiles.push(
+                    ...json.relationships_following.map(
+                      (entry: any) => entry.string_list_data[0]
+                    )
+                  );
+                } catch (error) {
+                  console.error(
+                    `Error parsing JSON in following data for file: ${name}`,
+                    error
+                  );
+                }
+              })
+          );
+
+          setPendingFollowRequests(pendingProfiles);
+          setFollowers(followersProfiles);
+          setFollowing(followingProfiles);
         }
-
-        // Search and process followers
-        await Promise.all(
-          Object.keys(content.files)
-            .filter((name) => followersPattern.test(name))
-            .map(async (name) => {
-              const fileContent = await content.files[name].async("text");
-              try {
-                const json = JSON.parse(fileContent);
-                followersProfiles.push(
-                  ...json.map((entry: any) => entry.string_list_data[0])
-                );
-              } catch (error) {
-                console.error(
-                  `Error parsing JSON in followers' data for file: ${name}`,
-                  error
-                );
-              }
-            })
-        );
-
-        // Search and process following
-        await Promise.all(
-          Object.keys(content.files)
-            .filter((name) => followingPattern.test(name))
-            .map(async (name) => {
-              const fileContent = await content.files[name].async("text");
-              try {
-                const json = JSON.parse(fileContent);
-                followingProfiles.push(
-                  ...json.relationships_following.map(
-                    (entry: any) => entry.string_list_data[0]
-                  )
-                );
-              } catch (error) {
-                console.error(
-                  `Error parsing JSON in following data for file: ${name}`,
-                  error
-                );
-              }
-            })
-        );
-
-        setPendingFollowRequests(pendingProfiles);
-        setFollowers(followersProfiles);
-        setFollowing(followingProfiles);
-      }
+      });
     },
     []
   );
 
   const calculateDetractors = (e: FormEvent) => {
     e.preventDefault();
+    sessionStorage.clear();
     const followersSet = new Set(followers.map((f) => f.value));
     const detractorsList = following.filter((f) => !followersSet.has(f.value));
 
@@ -153,6 +161,9 @@ export function DetractorsComponent() {
         <div className="flex flex-col gap-2 bg-zinc-100 w-full md:w-fit p-4 rounded-xl">
           <label htmlFor="followers-file" className="font-bold">
             Anexe o arquivo .zip aqui:
+            {isPending && (
+              <Spinner className="inline-flex self-center mx-2 w-5" />
+            )}
           </label>
           <input
             name="followers-file"
@@ -171,6 +182,7 @@ export function DetractorsComponent() {
         </div>
       </div>
       <motion.button
+        disabled={isPending}
         whileTap={{
           scale: 0.9,
         }}
@@ -191,7 +203,9 @@ export function DetractorsComponent() {
               ref={searchTermRef}
               id="search"
               type="text"
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) =>
+                startTransition(() => setSearchTerm(e.target.value))
+              }
               placeholder="Filtrar falsianes..."
               className="pr-4 pl-10 py-2 border rounded-full"
             />
@@ -213,11 +227,13 @@ export function DetractorsComponent() {
             </h3>
             <ul className="flex mt-4 flex-wrap gap-4">
               {filterPendingFollowRequests.map((request, index) => (
-                <PendingFollowersLink
-                  key={index}
-                  href={request.href}
-                  value={request.value}
-                />
+                <li key={index}>
+                  <UserLink
+                    variant="pendingFollowers"
+                    href={request.href}
+                    value={request.value}
+                  />
+                </li>
               ))}
             </ul>
           </motion.section>
@@ -236,7 +252,9 @@ export function DetractorsComponent() {
 
             <ul className="flex gap-4 mt-4 flex-wrap">
               {filterDetractors.map((d, index) => (
-                <DetractorLink key={index} href={d.href} value={d.value} />
+                <li key={index}>
+                  <UserLink variant="detractor" href={d.href} value={d.value} />
+                </li>
               ))}
             </ul>
           </motion.section>
@@ -245,69 +263,3 @@ export function DetractorsComponent() {
     </form>
   );
 }
-
-const DetractorLink = memo(function DetractorLink({
-  href,
-  value,
-}: {
-  href: string;
-  value: string;
-}) {
-  const [opened, setOpened] = useState(false);
-
-  return (
-    <li>
-      <motion.a
-        whileHover={{
-          rotate: -3,
-          scale: 1.2,
-        }}
-        data-opened={opened ? "true" : "false"}
-        onClick={(e) => {
-          setOpened(true);
-        }}
-        href={href}
-        target="_blank"
-        rel="noreferrer"
-        className="text-purple-800 data-[opened=true]:text-lime-800 data-[opened=true]:bg-lime-200 flex gap-2 items-center justify-center break-all  hover:bg-purple-50  border-purple-300 data-[opened=true]:border-lime-300 border bg-purple-100 px-2 py-2 rounded-xl"
-      >
-        {value}
-        <ExternalLink className="w-4" />
-        {opened && <CheckCheck className="w-5 text-lime-500" />}
-      </motion.a>
-    </li>
-  );
-});
-
-const PendingFollowersLink = memo(function PendingFollowersLink({
-  href,
-  value,
-}: {
-  href: string;
-  value: string;
-}) {
-  const [opened, setOpened] = useState(false);
-
-  return (
-    <li>
-      <motion.a
-        whileHover={{
-          rotate: -3,
-          scale: 1.2,
-        }}
-        data-opened={opened ? "true" : "false"}
-        onClick={(e) => {
-          setOpened(true);
-        }}
-        href={href}
-        target="_blank"
-        rel="noreferrer"
-        className="text-indigo-800 data-[opened=true]:text-lime-800 data-[opened=true]:bg-lime-200 flex gap-2 items-center justify-center break-all  hover:bg-indigo-50  border-indigo-300 data-[opened=true]:border-lime-300 border bg-indigo-100 px-2 py-2 rounded-xl"
-      >
-        {value}
-        <ExternalLink className="w-4" />
-        {opened && <CheckCheck className="w-5 text-lime-500" />}
-      </motion.a>
-    </li>
-  );
-});
