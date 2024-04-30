@@ -17,7 +17,7 @@ type Profile = {
 
 export function DetractorsComponent() {
   const [isPending, startTransition] = useTransition();
-  console.log(isPending);
+
   const [followers, setFollowers] = useState<Profile[]>([]);
   const [following, setFollowing] = useState<Profile[]>([]);
   const [detractors, setDetractors] = useState<Profile[]>([]);
