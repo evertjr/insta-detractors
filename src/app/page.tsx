@@ -7,16 +7,26 @@ export default function Home() {
         <DetractorsComponent />
       </main>
       <footer className="p-6">
-        <p className="text-center text-gray-600">
-          Made with ❤️ by{" "}
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">
+            Made with ❤️ by{" "}
+            <a
+              href="https://instagram.com/ooevert"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Evert Junior
+            </a>
+          </p>
           <a
-            href="https://instagram.com/ooevert"
+            href="https://alertpix.live/evertjunior"
             target="_blank"
             rel="noopener noreferrer"
+            className="inline-block px-4 py-1 text-xs hover:bg-purple-600/10 rounded-full border text-purple-800 border-purple-400 transition-colors"
           >
-            Evert Junior
+            Buy me a coffee ☕
           </a>
-        </p>
+        </div>
       </footer>
     </div>
   );
