@@ -32,10 +32,10 @@ export function DetractorsComponent() {
   const searchTermRef = React.useRef<HTMLInputElement>(null);
   const debouncedSearchTerm = useDebounce(searchTerm, 200);
   const filterDetractors = detractors.filter((d) =>
-    d.value.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+    d.value && d.value.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
   );
   const filterPendingFollowRequests = pendingFollowRequests.filter((request) =>
-    request.value.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+    request.value && request.value.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
   );
 
   const handleFileChange = useCallback(
