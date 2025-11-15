@@ -108,7 +108,15 @@ export function DetractorsComponent() {
                   const json = JSON.parse(fileContent);
                   followingProfiles.push(
                     ...json.relationships_following.map(
-                      (entry: any) => entry.string_list_data[0]
+                      (entry: any) => {
+                        // New Meta format: value is in title, href and timestamp are in string_list_data
+                        const stringData = entry.string_list_data[0];
+                        return {
+                          value: entry.title,
+                          href: stringData.href,
+                          timestamp: stringData.timestamp
+                        };
+                      }
                     )
                   );
                 } catch (error) {
