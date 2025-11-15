@@ -11,21 +11,13 @@ export default function Home() {
           <p className="text-gray-600 mb-4">
             Made with ❤️ by{" "}
             <a
-              href="https://instagram.com/ooevert"
+              href="https://instagram.com/evertju"
               target="_blank"
               rel="noopener noreferrer"
             >
               Evert Junior
             </a>
           </p>
-          <a
-            href="https://alertpix.live/evertjunior"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block px-4 py-1 text-xs hover:bg-purple-600/10 rounded-full border text-purple-800 border-purple-400 transition-colors"
-          >
-            Buy me a coffee ☕
-          </a>
         </div>
       </footer>
     </div>
