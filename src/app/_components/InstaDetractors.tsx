@@ -31,11 +31,15 @@ export function DetractorsComponent() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const searchTermRef = React.useRef<HTMLInputElement>(null);
   const debouncedSearchTerm = useDebounce(searchTerm, 200);
-  const filterDetractors = detractors.filter((d) =>
-    d.value && d.value.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+  const filterDetractors = detractors.filter(
+    (d) =>
+      d.value &&
+      d.value.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
   );
-  const filterPendingFollowRequests = pendingFollowRequests.filter((request) =>
-    request.value && request.value.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+  const filterPendingFollowRequests = pendingFollowRequests.filter(
+    (request) =>
+      request.value &&
+      request.value.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
   );
 
   const handleFileChange = useCallback(
@@ -107,17 +111,15 @@ export function DetractorsComponent() {
                 try {
                   const json = JSON.parse(fileContent);
                   followingProfiles.push(
-                    ...json.relationships_following.map(
-                      (entry: any) => {
-                        // New Meta format: value is in title, href and timestamp are in string_list_data
-                        const stringData = entry.string_list_data[0];
-                        return {
-                          value: entry.title,
-                          href: stringData.href,
-                          timestamp: stringData.timestamp
-                        };
-                      }
-                    )
+                    ...json.relationships_following.map((entry: any) => {
+                      // New Meta format: value is in title, href and timestamp are in string_list_data
+                      const stringData = entry.string_list_data[0];
+                      return {
+                        value: entry.title,
+                        href: stringData.href,
+                        timestamp: stringData.timestamp,
+                      };
+                    })
                   );
                 } catch (error) {
                   console.error(
@@ -160,7 +162,7 @@ export function DetractorsComponent() {
       <span className="text-3xl mr-2">🤔</span>
 
       <h1 className="bg-gradient-to-r font-bold text-3xl from-purple-600 via-pink-500 to-red-400 inline-block text-transparent bg-clip-text">
-        Há falsas em trenós...
+        Descubra seus Detratores no Instagram
       </h1>
       <h2 className="text-zinc-500 mt-2">
         Descubra quem saiu sem fechar a porta. Simples e seguro.
