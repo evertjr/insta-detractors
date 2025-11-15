@@ -158,7 +158,7 @@ export function DetractorsComponent() {
   };
 
   return (
-    <form id="followers-form" className="p-4 w-full max-w-4xl mx-auto mt-8">
+    <div className="p-4 w-full max-w-4xl mx-auto mt-8">
       <span className="text-3xl mr-2">🤔</span>
 
       <h1 className="bg-gradient-to-r font-bold text-3xl from-purple-600 via-pink-500 to-red-400 inline-block text-transparent bg-clip-text">
@@ -167,7 +167,9 @@ export function DetractorsComponent() {
       <h2 className="text-zinc-500 mt-2">
         Descubra quem saiu sem fechar a porta. Simples e seguro.
       </h2>
-      <div className="my-6 flex gap-4 flex-wrap">
+
+      <form id="followers-form" className="my-6">
+        <div className="flex gap-4 flex-wrap">
         <div className="flex flex-col gap-2 bg-zinc-100 w-full md:w-fit p-4 rounded-xl">
           <label htmlFor="followers-file" className="font-bold">
             Anexe o arquivo .zip aqui:
@@ -191,17 +193,18 @@ export function DetractorsComponent() {
           </small>
         </div>
       </div>
-      <motion.button
-        disabled={isPending}
-        whileTap={{
-          scale: 0.9,
-        }}
-        type="submit"
-        className="px-6 py-2 font-medium bg-purple-600 border text-white border-purple-600 rounded-full hover:bg-purple-800"
-        onClick={calculateDetractors}
-      >
-        Buscar Falsianes
-      </motion.button>
+        <motion.button
+          disabled={isPending}
+          whileTap={{
+            scale: 0.9,
+          }}
+          type="submit"
+          className="px-6 py-2 font-medium bg-purple-600 border text-white border-purple-600 rounded-full hover:bg-purple-800"
+          onClick={calculateDetractors}
+        >
+          Buscar Falsianes
+        </motion.button>
+      </form>
 
       <div className="pt-8 mt-8 border-t border-dashed max-w-6xl scroll-mt-10">
         {error && <span className="text-zinc-500">{error}</span>}
@@ -270,6 +273,6 @@ export function DetractorsComponent() {
           </motion.section>
         )}
       </div>
-    </form>
+    </div>
   );
 }
