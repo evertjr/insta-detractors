@@ -38,7 +38,7 @@ export function InstructionsModal() {
                 </p>
               </div>
               <ul className="mt-4">
-                {Array.from({ length: 9 }, (_, i) => i + 1).map((num) => (
+                {Array.from({ length: 8 }, (_, i) => i + 1).map((num) => (
                   <li key={num} className="bg-zinc-400">
                     <Image
                       src={`/img/${num}.webp`}
