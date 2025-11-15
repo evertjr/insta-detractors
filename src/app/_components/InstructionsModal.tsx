@@ -34,11 +34,11 @@ export function InstructionsModal() {
                 </p>
                 <p className="bg-zinc-100 rounded-xl px-2 py-1">
                   Obs: Para evitar falsos positivos, é importante que selecione{" "}
-                  <strong>Desde o início</strong> no intervalo de dados.
+                  <strong>Desde o início</strong> no intervalo de datas.
                 </p>
               </div>
               <ul className="mt-4">
-                {Array.from({ length: 8 }, (_, i) => i + 1).map((num) => (
+                {Array.from({ length: 9 }, (_, i) => i + 1).map((num) => (
                   <li key={num} className="bg-zinc-400">
                     <Image
                       src={`/img/${num}.webp`}
@@ -52,7 +52,7 @@ export function InstructionsModal() {
               </ul>
               <p className="mt-4">
                 Pronto! Você receberá em seu email um link para baixar um
-                arquivo, basta anexar no lugar indicado neste site.
+                arquivo zip, basta anexar no lugar indicado neste site.
               </p>
             </div>
           </div>
